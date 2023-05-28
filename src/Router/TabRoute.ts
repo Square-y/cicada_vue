@@ -6,7 +6,9 @@ import index from '../views/index.vue'
 import hello1 from '../views/hello1.vue'
 import hello2 from '../views/hello2.vue'
 import hello3 from '../views/hello3.vue'
-import user_mgmt from  '../views/user_mgmt/user/index.vue'
+import user_manage from  '../views/user_mgmt/user_manage/userManage.vue'
+import auth_manage from  '../views/user_mgmt/auth_manage/authManage.vue'
+import role_manage from  '../views/user_mgmt/role_manage/roleManage.vue'
 
 const route = Object.create(null)
 route.install = function (vue:any) {
@@ -17,8 +19,10 @@ route.install = function (vue:any) {
 	vue.component('hello1', hello1)
 	vue.component('hello2', hello2)
 	vue.component('hello3', hello3)
-  // 用户管理组件
-  vue.component('views/user_mgmt/user/index', user_mgmt)
+	// 用户管理组件
+	vue.component('user_manage', user_manage)
+	vue.component('role_manage', role_manage)
+	vue.component('auth_manage', auth_manage)
 }
 
 

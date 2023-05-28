@@ -62,5 +62,16 @@ export default defineConfig({
         transformerVariantGroup(),
       ]
     }),
+
   ],
+  server: {
+  // 跨域的写法
+      proxy: {
+        '/api': {
+          target: 'http://127.0.0.1:8082/', // 实际请求地址
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api/, "/api/"),
+        },
+      },
+    },
 })

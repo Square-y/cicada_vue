@@ -19,14 +19,14 @@
             class="demo-ruleForm"
           >
             <el-form-item prop="username">
-              <el-input v-model.number="ruleForm.age" placeholder="请输入用户名">
+              <el-input v-model="ruleForm.username" placeholder="请输入用户名">
               <template #prefix>
                 <Icon name="fa fa-user" class="form-item-icon" size="16" color="var(--el-input-icon-color)" />
               </template>
               </el-input>
             </el-form-item>
             <el-form-item  prop="pass">
-              <el-input v-model="ruleForm.pass" type="password" autocomplete="off" placeholder="请输入密码">
+              <el-input v-model="ruleForm.password" type="password" autocomplete="off" placeholder="请输入密码">
                 <template #prefix>
                   <Icon name="fa fa-unlock-alt" class="form-item-icon" size="16" color="var(--el-input-icon-color)" />
                 </template>
@@ -34,7 +34,7 @@
             </el-form-item>
             <el-form-item  prop="checkPass" >
               <el-input
-                v-model="ruleForm.checkPass"
+                v-model="ruleForm.repassword"
                 type="password"
                 autocomplete="off"
                 placeholder="确认密码"
@@ -90,64 +90,88 @@
 <script lang="ts" setup>
 import { reactive, ref } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
+import { ElMessage } from 'element-plus'
+import axios from 'axios'
+import { useRouter } from 'vue-router';
 
+
+const router = useRouter();
 const ruleFormRef = ref<FormInstance>()
 
-const checkAge = (rule: any, value: any, callback: any) => {
+const checkEmail = (rule: any, value: any, callback: any) => {
   if (!value) {
-    return callback(new Error('Please input the age'))
+    return callback(new Error('请输入邮箱'))
   }
+  var reg = /^[0-9a-zA-Z_.-]+[@][0-9a-zA-Z_.-]+([.][a-zA-Z]+){1,2}$/;
+
   setTimeout(() => {
-    if (!Number.isInteger(value)) {
-      callback(new Error('Please input digits'))
+    if (!reg.test(value)) {
+      callback(new Error('请输入邮箱'))
     } else {
-      if (value < 18) {
-        callback(new Error('Age must be greater than 18'))
-      } else {
-        callback()
-      }
+        callback();
     }
-  }, 1000)
+  }, 1000);
 }
 
 const validatePass = (rule: any, value: any, callback: any) => {
   if (value === '') {
     callback(new Error('Please input the password'))
   } else {
-    if (ruleForm.checkPass !== '') {
+    if (ruleForm.repassword !== '') {
       if (!ruleFormRef.value) return
-      ruleFormRef.value.validateField('checkPass', () => null)
+      ruleFormRef.value.validateField('repassword', () => null)
     }
     callback()
   }
 }
 const validatePass2 = (rule: any, value: any, callback: any) => {
   if (value === '') {
-    callback(new Error('Please input the password again'))
-  } else if (value !== ruleForm.pass) {
-    callback(new Error("Two inputs don't match!"))
+    callback(new Error('请再次输入密码'))
+  } else if (value !== ruleForm.password) {
+    callback(new Error("两次输入的密码不一致!"))
   } else {
     callback()
   }
 }
 
 const ruleForm = reactive({
-  pass: '',
-  checkPass: '',
-  age: '',
+  username: '',
+  password: '',
+  repassword: '',
 })
 
 const rules = reactive<FormRules>({
-  pass: [{ validator: validatePass, trigger: 'blur' }],
-  checkPass: [{ validator: validatePass2, trigger: 'blur' }],
-  age: [{ validator: checkAge, trigger: 'blur' }],
+  username: [{ validator: checkEmail, trigger: 'blur' }],
+  password: [{ validator: validatePass, trigger: 'blur' }],
+  repassword: [{ validator: validatePass2, trigger: 'blur' }],
 })
 
 const submitForm = (formEl: FormInstance | undefined) => {
   if (!formEl) return
   formEl.validate((valid) => {
     if (valid) {
-      console.log('submit!')
+      console.log('submit!', ruleForm)
+      axios.post("/api/register", ruleForm)
+      .then(function(data) {
+          if (data.data.retCode == "000") {
+            ElMessage({
+                  message: data.data.retMsg,
+                  type: 'success',
+                })
+            console.log(data.data)
+            console.log("register", data.data.token, data.data.user_id)
+            // 保存登录后的token状态
+            sessionStorage.setItem("token",data.data.token)
+            // 保存登录后的 用户id
+            sessionStorage.setItem('userId', data.data.user_id);
+            router.push({path:"/"});
+          } else {
+            ElMessage.error(data.data.retMsg)
+          }
+        }).catch(function(error){
+              // 向后端请求失败， 弹出异常信息
+              ElMessage.error(error)
+              })
     } else {
       console.log('error submit!')
       return false

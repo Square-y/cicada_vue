@@ -107,14 +107,19 @@ import {
   Location,
   Setting,
 } from '@element-plus/icons-vue'
-import { useCollapse } from '../../stores/collapse'
+import { useMenuInfo } from '../../stores/menuInfo'
 import emitter from "../../utils/eventbus" //menu也要引用刚刚新建的utils文件
 import { it } from "node:test";
 import { useTabStore } from '../../stores/editableTabs'
 import tab  from "./Tabs.vue"
 import axios from "axios"
+import { useRouter } from 'vue-router';
+import menu from "~/lang/backend/en/auth/menu"
+
 let TabStore= useTabStore()
 const editableTabs =TabStore.GetOpenedTabs
+
+
 
 
 // 接收侧边栏的 收缩状态
@@ -131,7 +136,77 @@ const openTab = (item: any) => {
   emitter.emit("opTab",item)	
   }
 
-const menuList = config.menu
+const router = useRouter();
+const menuInfo = useMenuInfo()
+
+const getMenuList = () => {
+  const header = {'headers':{'Authorization': sessionStorage.getItem("token")}}
+  if (sessionStorage.getItem("userId") && sessionStorage.getItem("token"))  {
+    axios.get("/api/menu?userId=" + sessionStorage.getItem("userId"), header)
+            .then(function(data){
+              if (data.data.retCode == "000"){
+                console.log("<<>>", sessionStorage.getItem("userId"),sessionStorage.getItem("token"))
+                console.log("menulogined:", data.data.result)
+                // menuList.value =  data.data.result
+                menuInfo.setMenuInfo(data.data.result)
+                
+                menuList.value = menuInfo.getMenuInfo()
+                return data.data.result
+              } else {
+                // 登录失败，报出登录失败提示信息
+                console.log("error",data.data.retMsg)
+                // ElMessage.error(data.data.retMsg)
+              }
+            }).catch(function(error){
+              // 向后端请求失败， 弹出异常信息
+              console.log("error",error)
+              // ElMessage.error(error)
+              })
+  } else {
+    axios.get("/api/menu")
+            .then(function(data){
+              if (data.data.retCode == "000"){
+                console.log("menu_unlogined", data.data.result)
+                // menuList.value =  data.data.result
+                menuInfo.setMenuInfo(data.data.result)
+                menuList.value =  menuInfo.getMenuInfo()
+                // console.log(">>><<<:",menuInfo.getMenuInfo())
+                return data.data.result
+              } else {
+                // 登录失败，报出登录失败提示信息
+                console.log(data.data.retMsg)
+                // ElMessage.error(data.data.retMsg)
+              }
+
+            }).catch(function(error){
+              // 向后端请求失败， 弹出异常信息
+              console.log(error)
+              // ElMessage.error(error)
+              })
+  }
+  
+}
+
+// 未使用 pinia
+const menuList = ref([])
+emitter.on("menu_list", (info: any) => {
+  // console.log("--->", info)
+  // menuList.value = info
+  getMenuList()
+  // console.log("+++", menuList.value)
+})
+
+
+
+getMenuList()
+
+
+// console.log('getMenuList:', getMenuList())
+
+
+
+console.log("menuList",menuList.value)
+// console.log("config",config.menu)
 
 
 let showMenu = true
@@ -197,6 +272,7 @@ const showHideMenu = (status: boolean) => {
 const handleOpen = (key: string, keyPath: string[]) => {
   console.log(key, keyPath)
 }
+
 const handleClose = (key: string, keyPath: string[]) => {
   console.log(key, keyPath)
 }
@@ -219,6 +295,11 @@ const handleClose = (key: string, keyPath: string[]) => {
 //   console.log("=====")
 //   console.log(isCollapse.value)
 // }
+
+defineExpose({
+  menuList,
+});
+
 </script>
 
 <style>

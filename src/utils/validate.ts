@@ -1,6 +1,6 @@
 import type { RuleType } from 'async-validator'
 import { FormItemRule } from 'element-plus'
-import { i18n } from '../lang'
+// import { i18n } from '../lang'
 
 /**
  * 手机号码验证
@@ -11,7 +11,7 @@ export function validatorMobile(rule: any, mobile: string | number, callback: Fu
         return callback()
     }
     if (!/^(1[3-9])\d{9}$/.test(mobile.toString())) {
-        return callback(new Error(i18n.global.t('validate.Please enter the correct mobile number')))
+        return callback(new Error('validate.Please enter the correct mobile number'))
     }
     return callback()
 }
@@ -24,7 +24,20 @@ export function validatorAccount(rule: any, val: string, callback: Function) {
         return callback()
     }
     if (!/^[a-zA-Z][a-zA-Z0-9_]{2,15}$/.test(val)) {
-        return callback(new Error(i18n.global.t('validate.Please enter the correct account')))
+        return callback(new Error('validate.Please enter the correct account'))
+    }
+    return callback()
+}
+
+/**
+ * 邮箱验证
+ */
+export function validatorEmail(rule: any, val: string, callback: Function) {
+    if (!val) {
+        return callback()
+    }
+    if (!/^[0-9a-zA-Z_.-]+[@][0-9a-zA-Z_.-]+([.][a-zA-Z]+){1,2}$/.test(val)) {
+        return callback(new Error('请输入邮箱'))
     }
     return callback()
 }
@@ -40,7 +53,7 @@ export function validatorPassword(rule: any, val: string, callback: Function) {
         return callback()
     }
     if (!regularPassword(val)) {
-        return callback(new Error(i18n.global.t('validate.Please enter the correct password')))
+        return callback(new Error('密码长度必须为 6~31 位'))
     }
     return callback()
 }
@@ -56,14 +69,14 @@ export function validatorVarName(rule: any, val: string, callback: Function) {
         return callback()
     }
     if (!regularVarName(val)) {
-        return callback(new Error(i18n.global.t('validate.Please enter the correct name')))
+        return callback(new Error('validate.Please enter the correct name'))
     }
     return callback()
 }
 
 export function validatorEditorRequired(rule: any, val: string, callback: Function) {
     if (!val || val == '<p><br></p>') {
-        return callback(new Error(i18n.global.t('validate.Content cannot be empty')))
+        return callback(new Error('validate.Content cannot be empty'))
     }
     return callback()
 }
@@ -72,18 +85,18 @@ export function validatorEditorRequired(rule: any, val: string, callback: Functi
  * 支持的表单验证规则
  */
 export const validatorType = {
-    required: i18n.global.t('validate.required'),
-    mobile: i18n.global.t('utils.mobile'),
-    account: i18n.global.t('utils.account'),
-    password: i18n.global.t('utils.password'),
-    varName: i18n.global.t('utils.variable name'),
-    editorRequired: i18n.global.t('validate.editor required'),
+    required: 'validate.required',
+    mobile: 'utils.mobile',
+    account: 'utils.account',
+    password: 'utils.password',
+    varName: 'utils.variable name',
+    editorRequired: 'validate.editor required',
     url: 'URL',
-    email: i18n.global.t('utils.email'),
-    date: i18n.global.t('utils.date'),
-    number: i18n.global.t('utils.number'),
-    integer: i18n.global.t('utils.integer'),
-    float: i18n.global.t('utils.float'),
+    email: 'utils.email',
+    date: 'utils.date',
+    number: 'utils.number',
+    integer: 'utils.integer',
+    float: 'utils.float',
 }
 
 export interface buildValidatorParams {
@@ -106,7 +119,7 @@ export function buildValidatorData({ name, message, title, trigger = 'blur' }: b
     if (name == 'required') {
         return {
             required: true,
-            message: message ? message : i18n.global.t('Please input field', { field: title }),
+            message: message ? message : '请输入正确的'+  title ,
             trigger: trigger,
         }
     }
@@ -116,7 +129,7 @@ export function buildValidatorData({ name, message, title, trigger = 'blur' }: b
     if (validatorType.includes(name)) {
         return {
             type: name as RuleType,
-            message: message ? message : i18n.global.t('Please enter the correct field', { field: title }),
+            message: message ? message : '请输入正确的' +  title ,
             trigger: trigger,
         }
     }
@@ -128,6 +141,7 @@ export function buildValidatorData({ name, message, title, trigger = 'blur' }: b
         password: validatorPassword,
         varName: validatorVarName,
         editorRequired: validatorEditorRequired,
+        email: validatorEmail,
     }
     if (validatorCustomFun[name]) {
         return {
